@@ -1,0 +1,21 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - apt-get update
+      - apt-get install -y openssh-client
+  pre_build:
+    commands:
+      - aws ssm get-parameter \
+        --name "/cicd/ec2/key" \
+        --with-decryption \
+        --query "Parameter.Value" \
+        --output text > cicd.pem
+      - chmod 400 cicd.pem
+  build:
+    commands:
+      - scp -o StrictHostKeyChecking=no \
+        -i cicd.pem \
+        index.html \
+        ubuntu@<EC2_PUBLIC_IP>:/var/www/html/
